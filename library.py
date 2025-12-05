@@ -7,11 +7,46 @@ import mysql.connector
 #)
 
 #cursor = libdb.cursor()
+Rflag = False
+Lflag = False
+
+#Lets user add an account, the specifics will be inserted
+#into the User table 
+def Add_User(Rflag, Lflag):
+    username = input("Enter a username:")
+    pword = input("Enter a password:")
+    role = input("Enter a role (librarian/reader):")
+    if role == "librarian":
+        Lflag = True
+    else:
+        Rflag = True
+
+    try:
+        cursor.execute(
+            "INSERT INTO Users (username, pword, Rflag, Lflag)"
+            (username, pword, Rflag, Lflag)
+        )
+        conn.commit()
+    #Error occurs if a user with the same username already exists
+    except mysql.connector.errors.IntegrityError:
+        print("User already exists. Try another.")
+
+def Login():
+    username = input("Username:")
+    password = input("Password:")
+
+
+status = input("Welcome to our library database, are you a new or rerning user?:")
+if status == "new":
+    Add_User()
+else:
+    Login()
+
 
 ### PSEUDOCODE
 #user class??
 
-Add_User():
+''' Add_User():
     input("what type of user? (lib or reader)")
     input("Username:")
     input("password:")
@@ -51,3 +86,4 @@ Return_book()
 Modify_user()
     if (librarian == true or user_acct == act_user)
         update user attributes
+        '''
