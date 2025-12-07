@@ -22,9 +22,10 @@ def Welcome_Screen():
 
 def Add_User():
     global rflag, lflag
-    username = input("Enter a username:")
-    upassword = input("Enter a password:")
-    ufname, ulname = input("What is your first and last name?").split()
+    username = input("Enter a username: ")
+    upassword = input("Enter a password: ")
+    ufname = input("Enter your first name: ")
+    ulname = input("Enter your last name: ")
     role = input("Enter a role (librarian/reader):")
     if role == "librarian":
         lflag = True
@@ -33,15 +34,37 @@ def Add_User():
 
     try:
         cursor.execute(
-            "INSERT INTO Users (username, upassword, rflag, lflag, ufname, ulname) VALUES (%s, %s, %s, %s, %s, %s)",
-            (username, upassword, rflag, lflag, ufname, ulname)
+            "INSERT INTO Users (username, upassword, ufname, ulname, rflag, lflag) VALUES (%s, %s, %s, %s, %s, %s)",
+            (username, upassword, ufname, ulname, rflag, lflag)
         )
         libdb.commit()
     #Error occurs if a user with the same username already exists
     except mysql.connector.errors.IntegrityError:
         print("User already exists.")
+        return
+
+    Login()
+    
+
+def Menu():
+    while True:
+        print("Welcome to the library!")
+        print("1. Delete a User")
+        print("2. Add a Book")
+        print("3. Delete a Book")
+        choice = input("Choose an option:")
+        match choice:
+            case "1":
+                Delete_User()
+            case "2":
+                print("hi")
+
+Welcome_Screen()
 
 def Login():
+    global current_user
+    current_user = None
+    print("Login")
     username = input("Username:")
     upassword = input("Password:")
 
@@ -52,31 +75,32 @@ def Login():
     #fetches complete line form db
     name = cursor.fetchone()
     if name:
-        print("Welcome back")
-        #Menu()
+        current_user = username
+        Menu()
     else:
         print("Incorrect user or password")
         Welcome_Screen()  
 
-Welcome_Screen()
+def Delete_User():
+    username = input("Enter the username of the user you would like to delete:")
+    cursor.execute(
+        "DELETE FROM Users WHERE username = %s",
+        (username,)
+    )
+    libdb.commit()
+
+    print(f"{username} has been deleted.")
+
+    if username == current_user:
+        current_user = None
+        return
+
 
 
 ### PSEUDOCODE
 #user class??
 
-''' Add_User():
-    input("what type of user? (lib or reader)")
-    input("Username:")
-    input("password:")
-
-Login()
-    input ("user and pass")
-    check if user is in db
-    if pass.user == user.user 
-        let in
-    else    
-        prompt again
-
+'''
 Delete_User()
     if (lib == true)
         del chosen user 
@@ -106,7 +130,8 @@ Modify_user()
     if (librarian == true or user_acct == act_user)
         update user attributes
 
-
+Search/View books
+        
 Menu()
     choose an action & calls the function
         '''
