@@ -94,6 +94,16 @@ def Delete_User():
     if username == current_user:
         current_user = None
         return
+    
+def Add_Book():
+    title = print("What is the book title?: ")
+    aid = print("What is the author's ID?: ")
+    date_pub = print("What date was it published?: ")
+    author = print("Who is the author?: ")
+
+    cursor.execute(
+        "ADD"
+    )
 
 
 
@@ -101,12 +111,6 @@ def Delete_User():
 #user class??
 
 '''
-Delete_User()
-    if (lib == true)
-        del chosen user 
-    if (user_acct == user_acct_del)
-        del chosen user 
-
 Add_book()
     if (lib == true)
         add books, publisher, author
