@@ -48,15 +48,15 @@ def Add_Book():
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
     date_published = input("What date was it published? ('yyyy-mm-dd'): ")
-    check_out_date = input("What is the date? ('yyyy-mm-dd'): ")
     author = input("Who is the author?: ")
 
     cursor.execute(
-        "INSERT INTO Book(title, aid, date_published, checked_out_by, check_out_date) VALUES (%s, %s, %s, %s, %s)",
-        (title, aid, date_published, checked_out_by, check_out_date)
+        "INSERT INTO Book(title, aid, date_published, checked_out_by) VALUES (%s, %s, %s, %s)",
+        (title, aid, date_published, checked_out_by)
     )
     libdb.commit()
 
+#Deletes a book and its attributes via the title
 def Delete_Book():
     title = input("Which book would you like to delete?:")
     cursor.execute(
@@ -65,6 +65,63 @@ def Delete_Book():
     )
     libdb.commit()
 
+def View_Library():
+    cursor.execute("SELECT * FROM Book")
+    row = cursor.fetchall()
+
+    print("Current Library:")
+    for i in row:
+        print(i)
+
+#Finish
+def Check_Out_Book():
+    global current_user
+    checked_book = input("Which book would you like to check out?: ")
+
+    cursor.execute("SELECT checked_out_by FROM Book WHERE title = %s",
+        (checked_book,)
+    )
+    exists = cursor.fetchone()
+
+    if not exists:
+        print("That book is not in the library.")
+        return
+
+    check_out_date = input("What is the date? ('yyyy-mm-dd'): ")
+
+    cursor.execute("UPDATE Book SET checked_out_by = %s, check_out_date = %s WHERE title = %s",
+                   (current_user, check_out_date, checked_book)
+    )
+    libdb.commit()
+    
+#Finish, if book not checked out, give error message
+def Return_Book():
+    global current_user
+    returned_book = input("Which book are you returning?: ")
+
+    cursor.execute(
+        "SELECT checked_out_by FROM Book WHERE title = %s",
+        (returned_book,)
+    )
+
+    row = cursor.fetchone()
+    if not row or row[0] != current_user:
+        print("Error: Book isn't available")
+        Menu()
+    
+    cursor.execute(
+        "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL WHERE title = %s",
+        (returned_book,)
+    )
+    libdb.commit()
+
+def Modify_User():
+    #If libarian, can alter anyone 
+    print("Which user will you be modifying: ")
+
+def Avg_Time_Checked_out():
+    print("hi")
+
 #Choice menu
 def Menu():
     while True:
@@ -72,6 +129,10 @@ def Menu():
         print("1. Delete a User")
         print("2. Add a Book")
         print("3. Delete a Book")
+        print("4. View Library")
+        print("5. Check Out a Book")
+        print("6. Return a Book")
+        print("7. Modify a User")
         choice = input("Choose an option:")
         match choice:
             case "1":
@@ -80,14 +141,14 @@ def Menu():
                 Add_Book()
             case "3":
                 Delete_Book()
-            #case "4":
-                #Show_Book_Selection()
-           #case "5":
-                #Check_Out_Book()
-            #case "6":
-                #Return_Book()
-            #case "7":
-                #Modify_User
+            case "4":
+                View_Library()
+            case "5":
+                Check_Out_Book()
+            case "6":
+                Return_Book()
+            case "7":
+                Modify_User()
 
 def Add_User():
     global rflag, lflag
@@ -137,31 +198,3 @@ def Delete_User():
 
 ### PSEUDOCODE
 #user class??
-
-'''
-Add_book()
-    if (lib == true)
-        add books, publisher, author
-        to respective tables
-
-Delete_book()
-    if (lib == true)
-        delete books (and all info connected)
-
-Check_out_book()
-    if(check if book is NUll in checked out)
-        update checked_out to True
-        update checked_out to current_date
-
-Return_book()
-    if (book is not NULL )
-        update checked_out to False
-        check_in_date update (?)
-                              
-Modify_user()
-    if (librarian == true or user_acct == act_user)
-        update user attributes
-
-Search/View books
-
-        '''
