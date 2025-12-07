@@ -1,46 +1,64 @@
 import mysql.connector
 
-#libdb = mysql.connector.connect(
-#    host="localhost",
-#    user="root",
- #   password="..."
-#)
+libdb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="libpassword!",
+    database = "library"
+)
 
-#cursor = libdb.cursor()
-Rflag = False
-Lflag = False
+cursor = libdb.cursor()
+rflag = False
+lflag = False
 
 #Lets user add an account, the specifics will be inserted
 #into the User table 
-def Add_User(Rflag, Lflag):
+def Welcome_Screen():
+    status = input("Welcome to our library database, are you a new or returning user?:")
+    if status == "new":
+        Add_User()
+    else:
+        Login()
+
+def Add_User():
+    global rflag, lflag
     username = input("Enter a username:")
-    pword = input("Enter a password:")
+    upassword = input("Enter a password:")
+    ufname, ulname = input("What is your first and last name?").split()
     role = input("Enter a role (librarian/reader):")
     if role == "librarian":
-        Lflag = True
+        lflag = True
     else:
-        Rflag = True
+        rflag = True
 
     try:
         cursor.execute(
-            "INSERT INTO Users (username, pword, Rflag, Lflag)"
-            (username, pword, Rflag, Lflag)
+            "INSERT INTO Users (username, upassword, rflag, lflag, ufname, ulname) VALUES (%s, %s, %s, %s, %s, %s)",
+            (username, upassword, rflag, lflag, ufname, ulname)
         )
-        conn.commit()
+        libdb.commit()
     #Error occurs if a user with the same username already exists
     except mysql.connector.errors.IntegrityError:
-        print("User already exists. Try another.")
+        print("User already exists.")
 
 def Login():
     username = input("Username:")
-    password = input("Password:")
+    upassword = input("Password:")
 
+    cursor.execute(
+        "SELECT * FROM Users WHERE username = %s and upassword = %s",
+        (username, upassword)
+    )
+    #fetches complete line form db
+    name = cursor.fetchone()
+    if name:
+        print("Welcome back")
+        #Menu()
+    else:
+        print("Incorrect user or password")
+        Welcome_Screen()  
 
-status = input("Welcome to our library database, are you a new or rerning user?:")
-if status == "new":
-    Add_User()
-else:
-    Login()
+Welcome_Screen()
 
 
 ### PSEUDOCODE
@@ -53,6 +71,7 @@ else:
 
 Login()
     input ("user and pass")
+    check if user is in db
     if pass.user == user.user 
         let in
     else    
@@ -86,4 +105,8 @@ Return_book()
 Modify_user()
     if (librarian == true or user_acct == act_user)
         update user attributes
+
+
+Menu()
+    choose an action & calls the function
         '''
