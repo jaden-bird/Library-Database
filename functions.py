@@ -57,33 +57,85 @@ def Add_User():
         libdb.commit()
     #Error occurs if a user with the same username already exists
     except:
-        print("User already exists.")
-        return
+        print("Username already exists.")
+        Welcome_Screen()
 
     print(f"You are logged in as {username}")
     Menu()
 
 #Deletes a user, logs you out if it is your own account
-#Recheck, see how to check which cols added
 def Delete_User():
     global current_user
     username = input("Enter the username of the user you would like to delete:")
+
     cursor.execute(
         "DELETE FROM Users WHERE username = %s",
         (username,)
     )
     libdb.commit()
 
-    print(f"{username} has been deleted.")
+    if cursor.rowcount == 0:
+        print("Username does not exist.")
+        return
 
     if username == current_user:
         current_user = None
         print("Your account has been deleted.")
-        return
+        Welcome_Screen()
     
 def Modify_User():
-    #If libarian, can alter anyone 
-    print("Which user will you be modifying: ")
+    username = input("Which username will you be modifying: ")
+    cursor.execute("SELECT * FROM Users WHERE username = %s",
+        (username,)              
+    )
+    row = cursor.fetchone()
+    if not row:
+        print("Username doesn't exist.")
+        return
+    
+    print("What will you be modifying?")
+    print("1. Username")
+    print("2. Password")
+    print("3. First Name")
+    print("4. Last Name")
+    choice = input("Choice: ")
+    match choice:
+        case "1":
+            new_user = input("New username: ")
+            cursor.execute(
+                "UPDATE Users SET username = %s WHERE username = %s",
+                (new_user, username,)
+            )
+            libdb.commit()
+        case "2":
+            new_pass = input("New password: ")
+            cursor.execute(
+                "UPDATE Users SET upassword = %s WHERE username = %s",
+                (new_pass, username,)
+            )
+            libdb.commit()
+        case "3":
+            new_fname = input("New first name: ")
+            cursor.execute(
+                "UPDATE Users SET ufname = %s WHERE username = %s",
+                (new_fname, username,)
+            )
+            libdb.commit()
+        case "4":
+            new_lname = input("New last name: ")
+            cursor.execute(
+                "UPDATE Users SET ulname = %s WHERE username = %s",
+                (new_lname, username,)
+            )
+            libdb.commit()
+
+def View_Users():
+    cursor.execute("SELECT * FROM Users")
+    row = cursor.fetchall()
+
+    print("Current Accounts:")
+    for i in row:
+        print(i)
 
 #Lets the user add a book and its details 
 def Add_Book():
@@ -91,11 +143,24 @@ def Add_Book():
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
     date_published = input("What date was it published? (yyyy-mm-dd): ")
-    author = input("Who is the author?: ")
+    #author = input("Who is the author?: ")
 
     cursor.execute(
-        "INSERT INTO Book(title, aid, date_published, checked_out_by) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO Book(title, aid, date_published, checked_out_by, check_out_date) VALUES (%s, %s, %s, %s, NULL)",
         (title, aid, date_published, checked_out_by)
+    )
+    libdb.commit()
+
+    print(f"{title} has been added.")
+
+def Add_Author():
+    afname = input("What is the author's first name?: ")
+    alname = input("What is the author's last name?: ")
+    aid = input("What is the author's ID: ")
+
+    cursor.execute(
+        "INSERT INTO Author(aid, afname, alname) VALUES (%s, %s, %s)",
+        (aid, afname, alname)
     )
     libdb.commit()
 
@@ -112,6 +177,14 @@ def View_Library():
     row = cursor.fetchall()
 
     print("Current Library:")
+    for i in row:
+        print(i)
+    
+def View_Authors():
+    cursor.execute("SELECT * FROM Author")
+    row = cursor.fetchall()
+
+    print("Available Authors:")
     for i in row:
         print(i)
 
@@ -158,7 +231,6 @@ def Return_Book():
     )
     libdb.commit()
 
-
 def Avg_Time_Checked_out():
     print("hi")
 
@@ -173,6 +245,9 @@ def Menu():
         print("5. Check Out a Book")
         print("6. Return a Book")
         print("7. Modify a User")
+        print("8. View Users")
+        print("9. Add an Author")
+        print("10. View Available Authors")
         choice = input("Choose an option:")
         match choice:
             case "1":
@@ -189,5 +264,11 @@ def Menu():
                 Return_Book()
             case "7":
                 Modify_User()
+            case "8":
+                View_Users()
+            case "9":
+                Add_Author()
+            case "10":
+                View_Authors()
 
 
