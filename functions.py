@@ -3,6 +3,7 @@
 cursor = None
 libdb = None
 
+#Initializations
 def init(c, db):
     global cursor, libdb
     cursor = c
@@ -15,7 +16,6 @@ def Welcome_Screen():
     else:
         Login()
 
-#Login Menu
 def Login():
     global current_user
     current_user = None
@@ -63,7 +63,6 @@ def Add_User():
     print(f"You are logged in as {username}")
     Menu()
 
-#Deletes a user, logs you out if it is your own account
 def Delete_User():
     global current_user
     username = input("Enter the username of the user you would like to delete:")
@@ -128,6 +127,8 @@ def Modify_User():
                 (new_lname, username,)
             )
             libdb.commit()
+    
+print("Successfully updated")
 
 def View_Users():
     cursor.execute("SELECT * FROM Users")
@@ -137,14 +138,12 @@ def View_Users():
     for i in row:
         print(i)
 
-#Lets the user add a book and its details 
 def Add_Book():
     checked_out_by = current_user
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
     date_published = input("What date was it published? (yyyy-mm-dd): ")
     #author = input("Who is the author?: ")
-
     cursor.execute(
         "INSERT INTO Book(title, aid, date_published, checked_out_by, check_out_date) VALUES (%s, %s, %s, %s, NULL)",
         (title, aid, date_published, checked_out_by)
@@ -188,7 +187,6 @@ def View_Authors():
     for i in row:
         print(i)
 
-#Finish
 def Check_Out_Book():
     global current_user
     checked_book = input("Which book would you like to check out?: ")
@@ -209,7 +207,6 @@ def Check_Out_Book():
     )
     libdb.commit()
 
-#Finish, if book not checked out, give error message
 def Return_Book():
     global current_user
     returned_book = input("Which book are you returning?: ")
@@ -224,15 +221,22 @@ def Return_Book():
         print("Error: Book isn't available for return")
         #Menu()
         #return
+
+    return_date = input("What is today's date? (yyyy-mm-dd)")
     
     cursor.execute(
-        "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL WHERE title = %s",
-        (returned_book,)
+        "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL, return_date = %s WHERE title = %s",
+        (return_date, returned_book,)
     )
     libdb.commit()
 
-def Avg_Time_Checked_out():
-    print("hi")
+def Avg_Time_Checked_Out():
+    cursor.execute("SELECT DATEDIFF (return_date, check_out_date) AS days_out FROM Book Where return_date is NOT NULL AND check_out_date IS NOT NULL")
+    rows = cursor.fetchall()
+
+    total_days = sum([r[0] for r in rows])
+    average = total_days / len(rows)
+
 
 #Choice menu
 def Menu():
@@ -248,6 +252,7 @@ def Menu():
         print("8. View Users")
         print("9. Add an Author")
         print("10. View Available Authors")
+        print("11. Return Average Time Books Are Checked Out")
         choice = input("Choose an option:")
         match choice:
             case "1":
@@ -270,5 +275,6 @@ def Menu():
                 Add_Author()
             case "10":
                 View_Authors()
-
+            case "11":
+                Avg_Time_Checked_Out()
 
