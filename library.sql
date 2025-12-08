@@ -48,3 +48,5 @@ INSERT INTO Manages VALUES ('TheLibrarian', 'Emma');
 
 INSERT INTO Returns_Table VALUES ('reader1', 'Macbeth', '2025-12-20');
 INSERT INTO Returns_Table VALUES ('reader2', 'Emma', '2026-01-03');
+
+ALTER TABLE Book ADD COLUMN return_date DATE;

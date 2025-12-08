@@ -37,12 +37,15 @@ def Login():
         Welcome_Screen() 
 
 def Add_User():
-    global rflag, lflag, current_user
+    global current_user
     username = input("Enter a username: ")
     upassword = input("Enter a password: ")
     ufname = input("Enter your first name: ")
     ulname = input("Enter your last name: ")
     role = input("Enter a role (librarian/reader):")
+
+    rflag = False
+    lflag = False
 
     if role == "librarian":
         lflag = True
@@ -128,7 +131,7 @@ def Modify_User():
             )
             libdb.commit()
     
-print("Successfully updated")
+    print("Successfully updated")
 
 def View_Users():
     cursor.execute("SELECT * FROM Users")
@@ -143,10 +146,9 @@ def Add_Book():
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
     date_published = input("What date was it published? (yyyy-mm-dd): ")
-    #author = input("Who is the author?: ")
     cursor.execute(
-        "INSERT INTO Book(title, aid, date_published, checked_out_by, check_out_date) VALUES (%s, %s, %s, %s, NULL)",
-        (title, aid, date_published, checked_out_by)
+        "INSERT INTO Book(title, aid, date_published, checked_out_by, check_out_date) VALUES (%s, %s, %s, NULL, NULL)",
+        (title, aid, date_published)
     )
     libdb.commit()
 
@@ -219,24 +221,23 @@ def Return_Book():
     row = cursor.fetchone()
     if not row or row[0] != current_user:
         print("Error: Book isn't available for return")
-        #Menu()
-        #return
+        return
 
     return_date = input("What is today's date? (yyyy-mm-dd)")
     
     cursor.execute(
-        "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL, return_date = %s WHERE title = %s",
-        (return_date, returned_book,)
+        "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL WHERE title = %s",
+        (returned_book,)
     )
     libdb.commit()
 
-def Avg_Time_Checked_Out():
-    cursor.execute("SELECT DATEDIFF (return_date, check_out_date) AS days_out FROM Book Where return_date is NOT NULL AND check_out_date IS NOT NULL")
+def Avg_Time_Checked_Out(): 
+    cursor.execute("SELECT AVG(DATEDIFF(CURDATE(), check_out_date)) FROM Book WHERE check_out_date IS NOT NULL")
     rows = cursor.fetchall()
 
     total_days = sum([r[0] for r in rows])
     average = total_days / len(rows)
-
+    print(f"Average: {average:.2f} days")
 
 #Choice menu
 def Menu():

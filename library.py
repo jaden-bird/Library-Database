@@ -10,9 +10,6 @@ libdb = mysql.connector.connect(
 )
 
 cursor = libdb.cursor()
-rflag = False
-lflag = False
-
 functions.init(cursor, libdb)
 
 functions.Welcome_Screen()
