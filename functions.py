@@ -15,7 +15,7 @@ def init(c, db):
     libdb = db
 
 def Pause():
-    input("Press Enter to return to the menu")
+    input("Press Enter to return to the menu.")
 
 def Permission():
     if not lflag:
@@ -49,11 +49,11 @@ def Login():
         rflag, lflag = name
         Menu()
     else:
-        print("Incorrect user or password")
+        print("Incorrect user or password.")
         Welcome_Screen() 
 
 def Logout():
-    print("Successfully Logged Out")
+    print("Successfully logged Out.")
     Welcome_Screen()
 
 def Add_User():
@@ -64,7 +64,7 @@ def Add_User():
     upassword = input("Enter a password: ")
     ufname = input("Enter your first name: ")
     ulname = input("Enter your last name: ")
-    role = input("Enter a role (librarian/reader):")
+    role = input("Enter a role (librarian/reader): ")
 
     if role == "librarian":
         lflag = True
@@ -87,9 +87,8 @@ def Add_User():
     Menu()
 
 def Delete_User():
-    
     global current_user
-    username = input("Enter the username of the user you would like to delete:")
+    username = input("Enter the username of the user you would like to delete: ")
 
     if lflag:
         pass
@@ -186,7 +185,7 @@ def View_Users():
 def Add_Book():
     if not Permission():
         return
-    checked_out_by = current_user
+    
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
     date_published = input("What date was it published? (yyyy-mm-dd): ")
@@ -202,7 +201,7 @@ def Add_Book():
 def Add_Author():
     afname = input("What is the author's first name?: ")
     alname = input("What is the author's last name?: ")
-    aid = input("What is the author's ID: ")
+    aid = input("What is the author's ID?: ")
 
     cursor.execute(
         "INSERT INTO Author(aid, afname, alname) VALUES (%s, %s, %s)",
@@ -214,7 +213,7 @@ def Add_Author():
 def Delete_Book():
     if not Permission():
         return
-    title = input("Which book would you like to delete?:")
+    title = input("Which book would you like to delete?: ")
     cursor.execute(
         "DELETE FROM Book WHERE title = %s",
             (title,)
@@ -235,7 +234,7 @@ def View_Authors():
     cursor.execute("SELECT * FROM Author")
     row = cursor.fetchall()
 
-    print("Available Authors:")
+    print("Available Authors: ")
     for i in row:
         print(i)
     Pause()
@@ -273,10 +272,10 @@ def Return_Book():
 
     row = cursor.fetchone()
     if not row or row[0] != current_user:
-        print("Error: Book isn't available for return")
+        print("Error: Book isn't available for return,")
         return
 
-    return_date = input("What is today's date? (yyyy-mm-dd)")
+    return_date = input("What is today's date? (yyyy-mm-dd): ")
     
     cursor.execute(
         "UPDATE Book SET checked_out_by = NULL, check_out_date = NULL WHERE title = %s",
@@ -345,4 +344,3 @@ def Menu():
                 Logout()
             case "13":
                 Exit_Db()
-
