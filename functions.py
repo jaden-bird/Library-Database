@@ -1,13 +1,28 @@
 #functions.py
+import sys
 
 cursor = None
 libdb = None
+
+current_user = None
+rflag = False
+lflag = False
 
 #Initializations
 def init(c, db):
     global cursor, libdb
     cursor = c
     libdb = db
+
+def Pause():
+    input("Press Enter to return to the menu")
+
+def Permission():
+    if not lflag:
+        print("You do not have permission to do this.")
+        Pause()
+        return False
+    return True
 
 def Welcome_Screen():
     status = input("Welcome to our library database, are you a new or returning user?:")
@@ -17,35 +32,39 @@ def Welcome_Screen():
         Login()
 
 def Login():
-    global current_user
+    global current_user, rflag, lflag
     current_user = None
     print("Login")
     username = input("Username:")
     upassword = input("Password:")
 
     cursor.execute(
-        "SELECT * FROM Users WHERE username = %s and upassword = %s",
+        "SELECT rflag, lflag FROM Users WHERE username = %s and upassword = %s",
         (username, upassword)
     )
     #fetches complete line form db
     name = cursor.fetchone()
     if name:
         current_user = username
+        rflag, lflag = name
         Menu()
     else:
         print("Incorrect user or password")
         Welcome_Screen() 
 
+def Logout():
+    print("Successfully Logged Out")
+    Welcome_Screen()
+
 def Add_User():
-    global current_user
+    global rflag, lflag, current_user
+    rflag = False
+    lflag = False
     username = input("Enter a username: ")
     upassword = input("Enter a password: ")
     ufname = input("Enter your first name: ")
     ulname = input("Enter your last name: ")
     role = input("Enter a role (librarian/reader):")
-
-    rflag = False
-    lflag = False
 
     if role == "librarian":
         lflag = True
@@ -64,11 +83,21 @@ def Add_User():
         Welcome_Screen()
 
     print(f"You are logged in as {username}")
+    current_user = username
     Menu()
 
 def Delete_User():
+    
     global current_user
     username = input("Enter the username of the user you would like to delete:")
+
+    if lflag:
+        pass
+    else:
+        if username != current_user:
+            print("You cannot delete other users.")
+            Pause()
+            return
 
     cursor.execute(
         "DELETE FROM Users WHERE username = %s",
@@ -84,9 +113,20 @@ def Delete_User():
         current_user = None
         print("Your account has been deleted.")
         Welcome_Screen()
+    Pause()
     
 def Modify_User():
+    global current_user, lflag
     username = input("Which username will you be modifying: ")
+
+    if lflag:
+        pass
+    else:
+        if username != current_user:
+            print("You cannot modify other users.")
+            Pause()
+            return
+
     cursor.execute("SELECT * FROM Users WHERE username = %s",
         (username,)              
     )
@@ -132,6 +172,7 @@ def Modify_User():
             libdb.commit()
     
     print("Successfully updated")
+    Pause()
 
 def View_Users():
     cursor.execute("SELECT * FROM Users")
@@ -140,8 +181,11 @@ def View_Users():
     print("Current Accounts:")
     for i in row:
         print(i)
+    Pause()
 
 def Add_Book():
+    if not Permission():
+        return
     checked_out_by = current_user
     title = input("What is the book title?: ")
     aid = input("What is the author's ID?: ")
@@ -153,6 +197,7 @@ def Add_Book():
     libdb.commit()
 
     print(f"{title} has been added.")
+    Pause()
 
 def Add_Author():
     afname = input("What is the author's first name?: ")
@@ -164,14 +209,18 @@ def Add_Author():
         (aid, afname, alname)
     )
     libdb.commit()
+    Pause()
 
 def Delete_Book():
+    if not Permission():
+        return
     title = input("Which book would you like to delete?:")
     cursor.execute(
         "DELETE FROM Book WHERE title = %s",
             (title,)
     )
     libdb.commit()
+    Pause()
 
 def View_Library():
     cursor.execute("SELECT * FROM Book")
@@ -180,6 +229,7 @@ def View_Library():
     print("Current Library:")
     for i in row:
         print(i)
+    Pause()
     
 def View_Authors():
     cursor.execute("SELECT * FROM Author")
@@ -188,6 +238,7 @@ def View_Authors():
     print("Available Authors:")
     for i in row:
         print(i)
+    Pause()
 
 def Check_Out_Book():
     global current_user
@@ -208,6 +259,8 @@ def Check_Out_Book():
                    (current_user, check_out_date, checked_book)
     )
     libdb.commit()
+    print(f"{checked_book} has been successfully checked out.")
+    Pause()
 
 def Return_Book():
     global current_user
@@ -230,6 +283,8 @@ def Return_Book():
         (returned_book,)
     )
     libdb.commit()
+    print(f"{returned_book} has been returned.")
+    Pause()
 
 def Avg_Time_Checked_Out(): 
     cursor.execute("SELECT AVG(DATEDIFF(CURDATE(), check_out_date)) FROM Book WHERE check_out_date IS NOT NULL")
@@ -238,32 +293,40 @@ def Avg_Time_Checked_Out():
     total_days = sum([r[0] for r in rows])
     average = total_days / len(rows)
     print(f"Average: {average:.2f} days")
+    Pause()
+
+def Exit_Db():
+    global current_user
+    print(f"Goodbye {current_user}!")
+    sys.exit()
 
 #Choice menu
 def Menu():
     while True:
         print("Welcome to the library!")
-        print("1. Delete a User")
-        print("2. Add a Book")
-        print("3. Delete a Book")
-        print("4. View Library")
+        print("1. View Users")
+        print("2. View Library")
+        print("3. View Available Authors")
+        print("4. Add a Book")
         print("5. Check Out a Book")
         print("6. Return a Book")
         print("7. Modify a User")
-        print("8. View Users")
+        print("8. Delete a User")
         print("9. Add an Author")
-        print("10. View Available Authors")
+        print("10. Delete a Book")
         print("11. Return Average Time Books Are Checked Out")
+        print("12. Logout")
+        print("13. Exit Database")
         choice = input("Choose an option:")
         match choice:
             case "1":
-                Delete_User()
+                View_Users()
             case "2":
-                Add_Book()
-            case "3":
-                Delete_Book()
-            case "4":
                 View_Library()
+            case "3":
+                View_Authors()
+            case "4":
+                Add_Book()
             case "5":
                 Check_Out_Book()
             case "6":
@@ -271,11 +334,15 @@ def Menu():
             case "7":
                 Modify_User()
             case "8":
-                View_Users()
+                Delete_User()
             case "9":
                 Add_Author()
             case "10":
-                View_Authors()
+                Delete_Book()
             case "11":
                 Avg_Time_Checked_Out()
+            case "12":
+                Logout()
+            case "13":
+                Exit_Db()
 
