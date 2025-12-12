@@ -213,7 +213,13 @@ def Add_Author():
 def Delete_Book():
     if not Permission():
         return
+    
     title = input("Which book would you like to delete?: ")
+
+    cursor.execute("DELETE FROM Published_By WHERE title = %s", (title,))
+    cursor.execute("DELETE FROM Genre WHERE title = %s", (title,))
+    cursor.execute("DELETE FROM Manages WHERE title = %s", (title,))
+    cursor.execute("DELETE FROM Returns_Table WHERE title = %s", (title,))
     cursor.execute(
         "DELETE FROM Book WHERE title = %s",
             (title,)
